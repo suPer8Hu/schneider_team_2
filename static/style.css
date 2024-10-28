@@ -1,0 +1,58 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f9;
+    color: #333;
+}
+
+header {
+    background-color: #002f63;
+    color: white;
+    padding: 20px;
+    text-align: center;
+}
+
+.container {
+    width: 80%;
+    margin: 20px auto;
+}
+
+form {
+    display: grid;
+    gap: 15px;
+    background-color: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.form-group label {
+    font-weight: bold;
+}
+
+input[type="text"], input[type="number"], button {
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+button {
+    background-color: #002f63;
+    color: white;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+.results h3 {
+    margin-top: 20px;
+    color: #002f63;
+}
+
+.results ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+.results ul li {
+    padding: 5px;
+    border-bottom: 1px solid #ddd;
+}
