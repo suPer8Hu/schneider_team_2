@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Optimized Route</title>
+</head>
+<body>
+    <h1>Optimized Route</h1>
+    {% if route %}
+        <ul>
+            {% for stop in route['ReportRoutes'][0]['Stops'] %}
+                <li>{{ stop['Address']['City'] }}, {{ stop['Address']['State'] }}</li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>Optimized route not available.</p>
+    {% endif %}
+</body>
+</html>

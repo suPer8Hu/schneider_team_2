@@ -4,6 +4,7 @@ import pandas as pd
 from geopy.geocoders import Nominatim
 import pickle
 import time
+from pyspark.sql import SparkSession
 
 # Initialize geolocator with a unique user agent
 geolocator = Nominatim(user_agent="freight_load_search_app")
@@ -29,56 +30,31 @@ def main():
     Main function to load CSV data, extract unique city-state combinations,
     geocode them, and save the coordinates mapping.
     """
-    # Specify the correct delimiter based on your CSV files
-    delimiter = ','  # Comma-separated
+    spark = SparkSession.builder.appName("FreightCoordPrecompute").getOrCreate()
 
-    # Load CSV data with the correct delimiter
-    try:
-        posting_data = pd.read_csv("./load_posting.csv", sep=delimiter)
-        stop_data = pd.read_csv("./load_stop.csv", sep=delimiter)
-    except FileNotFoundError as e:
-        print(f"Error: {e}")
-        return
-    except pd.errors.ParserError as e:
-        print(f"Error parsing CSV files: {e}")
-        return
+    # Load CSV files into Spark DataFrames
+    load_posting_df = spark.read.csv("load_posting.csv", header=True, inferSchema=True)
+    load_stop_df = spark.read.csv("load_stop.csv", header=True, inferSchema=True)
 
-    # Print column names to verify
-    print("Posting Data Columns:", posting_data.columns.tolist())
-    print("Stop Data Columns:", stop_data.columns.tolist())
-
-    # Check if 'CITY' and 'STATE' columns exist in stop_data
-    required_columns = ['CITY', 'STATE']
-    for col in required_columns:
-        if col not in stop_data.columns:
-            print(f"Error: Column '{col}' not found in load_stop.csv")
-            return
-
-    # Combine CITY and STATE into a single string for uniqueness with standardized formatting
-    stop_data['CITY_STATE'] = stop_data.apply(
-        lambda row: f"{row['CITY'].title().strip()}, {row['STATE'].upper().strip()}", axis=1
-    )
-
-    # Extract unique city-state combinations from 'load_stop.csv'
-    unique_stop_cities = stop_data['CITY_STATE'].unique()
+    # Combine CITY and STATE for unique identification
+    stop_data = load_stop_df.selectExpr("CITY", "STATE", "CONCAT(CITY, ', ', STATE) AS CITY_STATE")
+    unique_stop_cities = stop_data.select("CITY_STATE").distinct().collect()
 
     city_coords = {}
 
     total_cities = len(unique_stop_cities)
     print(f"Total unique city-state combinations to process: {total_cities}")
 
-    for idx, city_state in enumerate(unique_stop_cities, start=1):
-        if pd.isnull(city_state):
-            print(f"Skipping NaN CITY_STATE at index {idx}")
-            continue  # Skip if CITY_STATE is NaN
+    for idx, row in enumerate(unique_stop_cities, start=1):
+        city_state = row["CITY_STATE"]
         try:
             city, state = city_state.split(', ')
+            coords = get_coordinates(city, state)
+            city_coords[city_state] = coords
         except ValueError:
             print(f"Invalid CITY_STATE format: '{city_state}' at index {idx}")
             city_coords[city_state] = None
             continue
-        coords = get_coordinates(city, state)
-        city_coords[city_state] = coords
         time.sleep(1)  # Respect Nominatim's usage policy
 
     # Save the coordinates mapping to a pickle file
@@ -88,6 +64,8 @@ def main():
         print("City coordinates have been saved to 'city_coords.pkl'.")
     except Exception as e:
         print(f"Error saving 'city_coords.pkl': {e}")
+
+    spark.stop()
 
 if __name__ == "__main__":
     main()

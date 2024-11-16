@@ -1,0 +1,19 @@
+<!-- templates/about.html -->
+{% extends "base.html" %}
+
+{% block title %}About{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Header with Logo -->
+    <div class="header">
+        <img src="{{ url_for('static', filename='schneider_logo.png') }}" alt="Schneider Logo">
+        <h1>About Us</h1>
+    </div>
+
+    <div class="content">
+        <p>Welcome to the Freight Load Search application. Here you can find and book freight loads efficiently. Our mission is to provide a seamless experience for carriers and shippers.</p>
+        <p>This application allows users to filter loads by origin, destination, transport type, and more, to find the perfect load for their needs.</p>
+    </div>
+</div>
+{% endblock %}

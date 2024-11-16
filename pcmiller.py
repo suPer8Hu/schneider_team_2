@@ -1,3 +1,5 @@
+
+
 import requests
 from urllib.parse import urlencode
 import backoff
@@ -21,103 +23,27 @@ def getHeaders(apikey):
 @backoff.on_exception(backoff.expo,
                       requests.exceptions.ReadTimeout, max_time=10)
 def makeRequest(url, headers, params, postData):
-    response = requests.post(url, headers=headers, params=params, data=postData, timeout=10)
-    return response
-
-def requestHelper(stop_list):
-    postData = {
-        "ReportRoutes": [{
-            "RouteId": "test",
-            "Stops": stop_list,
-            "ReportTypes": [
-                {
-                    "__type": "MileageReportType:http://pcmiler.alk.com/APIs/v1.0",
-                    "THoursWithSeconds": False
-                }
-            ]
-        }]
-    }
-    apikey = os.getenv('PCMILER_API_KEY')
-    if not apikey:
-        print("Error: PCMILER_API_KEY environment variable is not set.")
-        return None
     try:
-        url = f'https://pcmiler.alk.com/APIs/REST/v1.0/Service.svc/route/routeReports'
-        params = {
-            'dataVersion': 'current'
-        }
-        headers = getHeaders(apikey)
-        response = makeRequest(url, headers, urlencode(params), postData=json.dumps(postData))
-        jsonobj = response.json()
-        return jsonobj
-    except requests.exceptions.ReadTimeout as e:
-        print(f"Request Timed out after trying 10 times with an exponential backoff: {e}")
+        response = requests.post(url, headers=headers, params=params, data=postData, timeout=10)
+        # Debugging: Log response status and content
+        print(f"makeRequest Response Status Code: {response.status_code}")
+        print(f"makeRequest Response Content: {response.text[:500]}")
+        return response
     except requests.exceptions.RequestException as e:
-        print(f"Request failed: {e}")
-
-def routeCalc(stop_list, assetId=None, region=4):
-    # Construct the stops parameter from stop_list
-    stops = ';'.join([f"{stop['Lon']},{stop['Lat']}" for stop in stop_list])
-
-    # Define the request parameters
-    params = {
-        'stops': stops,
-        'assetId': assetId,
-        'region': region
-    }
-
-    apikey = os.getenv('PCMILER_API_KEY')
-    if not apikey:
-        print("Error: PCMILER_API_KEY environment variable is not set.")
-        return None
-
-    try:
-        url = 'https://pcmiler.alk.com/apis/rest/v1.0/Service.svc/route/routePath'
-        headers = getHeaders(apikey)
-
-        # Send the GET request with parameters
-        response = requests.get(url, headers=headers, params=params)
-
-        # Check if the response was successful
-        if response.status_code == 200:
-            jsonobj = response.json()
-            return jsonobj
-        else:
-            print(f"Request failed with status code {response.status_code}: {response.text}")
-
-    except requests.exceptions.ReadTimeout as e:
-        print(f"Request timed out: {e}")
-    except requests.exceptions.RequestException as e:
-        print(f"Request failed: {e}")
+        print(f"Error during request: {e}")
+        raise
 
 def mapGenerator(stop_list):
+    # Create postData for the request
     postData = {
         "Map": {
-            "Viewport": {
-                "Center": None,
-                "ScreenCenter": None,
-                "ZoomRadius": 0,
-                "CornerA": None,
-                "CornerB": None,
-                "Region": 0
-            },
-            "Projection": 0,
-            "Style": 0,
-            "ImageOption": 0,
+            "Viewport": {"Region": 0},
             "Width": 1366,
             "Height": 768,
             "Drawers": [8, 2, 7, 17, 15],
-            "LegendDrawer": [
-                {
-                    "Type": 0,
-                    "DrawOnMap": True
-                }
-            ],
-            "MapLayering": 0
         },
         "Routes": [
             {
-                "RouteId": None,
                 "Stops": [
                     {
                         "Address": {
@@ -126,17 +52,12 @@ def mapGenerator(stop_list):
                             "Zip": stop.get("Zip", ""),
                         },
                         "Region": 4,
-                        "IsViaPoint": False
                     }
                     for stop in stop_list
                 ],
-                "Options": {
-                    "HighwayOnly": True,
-                    "DistanceUnits": 0  # 0 for miles, 1 for kilometers
-                },
-                "DrawLeastCost": False
+                "Options": {"HighwayOnly": True, "DistanceUnits": 0},
             }
-        ]
+        ],
     }
 
     apikey = os.getenv('PCMILER_API_KEY')
@@ -146,34 +67,42 @@ def mapGenerator(stop_list):
 
     try:
         url = 'https://pcmiler.alk.com/apis/rest/v1.0/service.svc/mapRoutes?dataset=Current'
-        params = {
-            'dataVersion': 'current'
-        }
         headers = getHeaders(apikey)
         
-        # Make the request to the Map Routes API
-        response = requests.post(url, headers=headers, params=params, data=json.dumps(postData))
+        # Send request
+        response = requests.post(url, headers=headers, data=json.dumps(postData))
         
-        # Debugging: Print response status and headers
+        # Debugging: Log response details
         print(f"mapGenerator Response Status Code: {response.status_code}")
         print(f"mapGenerator Response Headers: {response.headers}")
         
-        # Debugging: Check Content-Type
+        # Check Content-Type
         content_type = response.headers.get('Content-Type', '')
         print(f"mapGenerator Content-Type: {content_type}")
-        
-        # If response is not an image, print the first 500 characters
+
         if not content_type.startswith('image/'):
-            print(f"Unexpected Content-Type. Response Content (first 500 chars): {response.text[:500]}")
+            print(f"Unexpected Content-Type. Response Content: {response.text[:500]}")
             return None
-        
-        # Attempt to open the image
+
+        # Try to open the image
         img = Image.open(BytesIO(response.content))
+        print("Image successfully received and opened.")
         return img
-    except requests.exceptions.ReadTimeout as e:
-        print(f"Request timed out: {e}")
+
     except requests.exceptions.RequestException as e:
         print(f"Request failed: {e}")
     except UnidentifiedImageError as e:
         print(f"PIL cannot identify image file: {e}")
 
+# Additional Debug Function
+def testAPI():
+    """Test PCMiler API connectivity with a sample stop list."""
+    stop_list = [
+        {"City": "Madison", "State": "WI", "Zip": "53703"},
+        {"City": "Chicago", "State": "IL", "Zip": "60601"}
+    ]
+    img = mapGenerator(stop_list)
+    if img:
+        img.show()  # Opens the image using the default viewer
+    else:
+        print("Failed to generate map.")
