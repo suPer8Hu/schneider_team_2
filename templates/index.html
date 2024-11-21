@@ -24,7 +24,7 @@
             <h1 class="text-orange mb-0">Freight Load Search</h1>
         </div>
         <nav>
-            <a href="{{ url_for('dashboard') }}" class="btn btn-outline-orange">Dashboard</a>
+            <!-- Navigation Links (if any) -->
         </nav>
     </div>
 
@@ -121,7 +121,7 @@
 
         <!-- Right: Load Listings -->
         <div class="col-md-8">
-            <div class="results-heading">Load Search Results</div>
+            <div class="results-heading"></div>
 
             {% if search_performed %}
                 {% if results %}
@@ -317,17 +317,6 @@
             .catch(error => console.error('Error fetching destination states:', error));
     });
 
-    document.getElementById('toggle-dashboard').addEventListener('click', function () {
-        const content = document.getElementById('dashboard-content');
-        if (content.style.display === 'none') {
-            content.style.display = 'block';
-            this.innerText = '-';
-        } else {
-            content.style.display = 'none';
-            this.innerText = '+';
-        }
-    });
-
     // Function to Fetch and Display the Map
     function getMap(loadId) {
         fetch(`/get_map?load_id=${encodeURIComponent(loadId)}`)
@@ -380,5 +369,46 @@
             dropdown.appendChild(defaultOption);
         }
     }
+</script>
+
+<!-- Enhanced Toggle Functionality for Dashboard Widget -->
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const toggleButton = document.getElementById('toggle-dashboard');
+        const dashboard = document.getElementById('dashboard-content');
+
+        // Function to update the button text based on visibility
+        function updateButtonText(isHidden) {
+            toggleButton.textContent = isHidden ? '+' : '-';
+            console.log(`Button text updated to: ${toggleButton.textContent}`);
+        }
+
+        // Function to set the dashboard visibility
+        function setDashboardVisibility(hidden) {
+            if (hidden) {
+                dashboard.classList.add('hidden');
+                console.log('Dashboard overview hidden.');
+            } else {
+                dashboard.classList.remove('hidden');
+                console.log('Dashboard overview shown.');
+            }
+            updateButtonText(hidden);
+        }
+
+        // Initialize the dashboard state based on localStorage
+        const isHidden = localStorage.getItem('dashboardHidden') === 'true';
+        console.log(`Initial dashboardHidden state: ${isHidden}`);
+        setDashboardVisibility(isHidden);
+
+        // Event listener for the toggle button
+        toggleButton.addEventListener('click', function() {
+            const currentlyHidden = dashboard.classList.contains('hidden');
+            console.log(`Currently hidden: ${currentlyHidden}`);
+            const newHiddenState = !currentlyHidden;
+            setDashboardVisibility(newHiddenState);
+            localStorage.setItem('dashboardHidden', newHiddenState);
+            console.log(`dashboardHidden set to: ${newHiddenState}`);
+        });
+    });
 </script>
 {% endblock %}

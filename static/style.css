@@ -66,6 +66,12 @@ button {
     border-bottom: 1px solid #ddd;
 }
 
+
+.hidden {
+    display: none;
+    transition: all 0.3s ease; /* Optional: Adds a smooth transition effect */
+}
+
 /* Style for the Search Button */
 .btn-search {
     background-color: #FF8800; /* Schneider orange color */
@@ -178,4 +184,5 @@ p {
 .btn:hover {
     background-color: #5a6268;
 }
+
 
