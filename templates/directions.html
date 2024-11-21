@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+
+{% block title %}Turn-by-Turn Directions{% endblock %}
+
+
+{% block content %}
+<div class="container">
+   <h2 class="mt-4">Turn-by-Turn Directions for Load ID: {{ load_id }}</h2>
+
+
+   {% if directions and directions|length > 0 %}
+   <div class="directions mt-3">
+       <h4>Directions:</h4>
+       <ol>
+           {% for step in directions %}
+               <li>
+                   <p><strong>Instruction:</strong> {{ step.instruction }}</p>
+                   {% if step.distance != 'N/A' %}
+                       <p><strong>Distance:</strong> {{ step.distance }} miles</p>
+                   {% endif %}
+                   {% if step.time != 'N/A' %}
+                       <p><strong>Estimated Time:</strong> {{ step.time }}</p>
+                   {% endif %}
+               </li>
+           {% endfor %}
+       </ol>
+   </div>
+   {% else %}
+   <div class="alert alert-warning mt-3">
+       <p>No directions available for this load.</p>
+   </div>
+   {% endif %}
+
+
+   <a href="{{ url_for('load_details', load_id=load_id) }}" class="btn btn-secondary mt-4">Back to Load Details</a>
+</div>
+{% endblock %}

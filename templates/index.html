@@ -28,6 +28,26 @@
         </nav>
     </div>
 
+    <!-- Mini Dashboard Widget -->
+    <div class="dashboard-widget card shadow-sm" style="position: absolute; top: 20px; right: 20px; width: 300px; z-index: 1000;">
+        <div class="card-header text-center d-flex justify-content-between align-items-center" style="color: #FF8800; font-weight: bold;">
+            <span>Dashboard Overview</span>
+            <button class="btn btn-sm btn-outline-dark" id="toggle-dashboard" style="padding: 0 5px; line-height: 1;">-</button>
+        </div>
+        <div class="card-body" id="dashboard-content">
+            {% if dashboard_stats %}
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item"><strong>Active Loads:</strong> {{ dashboard_stats.active_loads }}</li>
+                    <li class="list-group-item"><strong>Total Pickups:</strong> {{ dashboard_stats.total_pickups }}</li>
+                    <li class="list-group-item"><strong>Total Drop-offs:</strong> {{ dashboard_stats.total_dropoffs }}</li>
+                    <li class="list-group-item"><strong>Avg Load Weight:</strong> {{ dashboard_stats.avg_weight }} lbs</li>
+                </ul>
+            {% else %}
+                <p class="text-center">No data available</p>
+            {% endif %}
+        </div>
+    </div>
+
     <div class="row mt-4">
         <!-- Left: Search Filters -->
         <div class="col-md-4">
@@ -36,7 +56,8 @@
                 <form method="POST" id="search-form">
                     <!-- Capacity Type -->
                     <label for="type_truck">Capacity Type</label>
-                    <select id="type_truck" name="type_truck" class="form-select mb-3" required>
+                    <select id="type_truck" name="type_truck" class="form-select mb-3">
+                        <option value="">-- Any --</option>
                         <option value="Dry Van" {% if type_truck == 'Dry Van' %}selected{% endif %}>Dry Van</option>
                         <option value="Reefer" {% if type_truck == 'Reefer' %}selected{% endif %}>Reefer</option>
                         <option value="Flatbed" {% if type_truck == 'Flatbed' %}selected{% endif %}>Flatbed</option>
@@ -48,14 +69,17 @@
                     <select id="origin_city" name="origin_city" class="form-select mb-3">
                         <option value="">All Origins</option>
                         {% for city in unique_origin_cities %}
-                            <option value="{{ city }}" {% if origin_city == city %}selected{% endif %}>{{ city }}</option>
+                            <option value="{{ city }}" {% if origin_city.lower() == city.lower() %}selected{% endif %}>{{ city.title() }}</option>
                         {% endfor %}
                     </select>
 
                     <!-- Origin State -->
                     <label for="origin_state">Origin State</label>
                     <select id="origin_state" name="origin_state" class="form-select mb-3">
-                        <!-- Options will be populated by JavaScript -->
+                        <option value="">Select a State</option>
+                        {% for state in origin_states %}
+                            <option value="{{ state }}" {% if origin_state.upper() == state.upper() %}selected{% endif %}>{{ state.upper() }}</option>
+                        {% endfor %}
                     </select>
 
                     <!-- Search Radius -->
@@ -63,20 +87,32 @@
                     <input type="range" class="form-range mb-3" id="radius" name="radius" min="25" max="400" step="25" value="{{ radius }}" oninput="document.getElementById('radiusValue').innerText = this.value + ' miles';">
                     <div id="radiusValue" class="text-center mb-3">{{ radius }} miles</div>
 
+                    <!-- Load Weight -->
+                    <label for="weight">Load Weight (lbs)</label>
+                    <input type="range" class="form-range mb-3" id="weight" name="weight" min="0" max="50000" step="500" value="{{ weight }}" oninput="document.getElementById('weightValue').innerText = this.value + ' lbs';">
+                    <div id="weightValue" class="text-center mb-3">{{ weight }} lbs</div>
+
                     <!-- Destination City -->
                     <label for="dest_city">Destination City</label>
                     <select id="dest_city" name="dest_city" class="form-select mb-3">
                         <option value="">All Destinations</option>
                         {% for city in unique_dest_cities %}
-                            <option value="{{ city }}" {% if dest_city == city %}selected{% endif %}>{{ city }}</option>
+                            <option value="{{ city }}" {% if dest_city.lower() == city.lower() %}selected{% endif %}>{{ city.title() }}</option>
                         {% endfor %}
                     </select>
 
                     <!-- Destination State -->
                     <label for="dest_state">Destination State</label>
                     <select id="dest_state" name="dest_state" class="form-select mb-3">
-                        <!-- Options will be populated by JavaScript -->
+                        <option value="">Select a State</option>
+                        {% for state in dest_states %}
+                            <option value="{{ state }}" {% if dest_state.upper() == state.upper() %}selected{% endif %}>{{ state.upper() }}</option>
+                        {% endfor %}
                     </select>
+
+                    <!-- Hidden Inputs for Pagination -->
+                    <input type="hidden" name="page" value="1">
+                    <!-- Hidden input 'search' not needed here as POST indicates a search -->
 
                     <button type="submit" class="btn-search w-100 mt-3">Search</button>
                 </form>
@@ -87,32 +123,155 @@
         <div class="col-md-8">
             <div class="results-heading">Load Search Results</div>
 
-            {% if results %}
-                <!-- Loop over results -->
-                {% for result in results %}
-                <div class="load-entry mt-3">
-                    <div class="d-flex justify-content-between">
-                        <div>
-                            <p><strong>Origin:</strong> {{ result['Pickup_City'] }}, {{ result['Pickup_State'] }}</p>
-                            <p><strong>Destination:</strong> {{ result['Destination_City'] }}, {{ result['Destination_State'] }}</p>
-                            <p><strong>Weight:</strong> {{ result['TOTAL_WEIGHT'] }}</p>
-                            <p><strong>Transport Mode:</strong> {{ result['TRANSPORT_MODE'] }}</p>
+            {% if search_performed %}
+                {% if results %}
+                    <!-- Loop over results -->
+                    {% for result in results %}
+                    <div class="load-entry mt-3">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <p><strong>Origin:</strong> 
+                                    {% if result['Pickup_City'] %}
+                                        {{ result['Pickup_City'].title() }}, 
+                                    {% else %}
+                                        N/A, 
+                                    {% endif %}
+                                    {% if result['Pickup_State'] %}
+                                        {{ result['Pickup_State'].upper() }}
+                                    {% else %}
+                                        N/A
+                                    {% endif %}
+                                </p>
+                                <p><strong>Destination:</strong> 
+                                    {% if result['Destination_City'] %}
+                                        {{ result['Destination_City'].title() }}, 
+                                    {% else %}
+                                        N/A, 
+                                    {% endif %}
+                                    {% if result['Destination_State'] %}
+                                        {{ result['Destination_State'].upper() }}
+                                    {% else %}
+                                        N/A
+                                    {% endif %}
+                                </p>
+                                <p><strong>Weight:</strong> {{ result['TOTAL_WEIGHT'] }} lbs</p>
+                                <p><strong>Transport Mode:</strong> {{ result['TRANSPORT_MODE'] }}</p>
+                            </div>
+                            <div>
+                                <button class="btn-watch btn btn-primary" onclick="getMap('{{ result['LOAD_ID'] }}')">Watch</button>
+                                <!-- Updated "Contact to Book" button -->
+                                <a href="{{ url_for('load_details', load_id=result['LOAD_ID']) }}" class="btn-book btn btn-secondary">Contact to Book</a>
+                            </div>
                         </div>
-                        <div>
-                            <button class="btn-watch" onclick="getMap({{ result['LOAD_ID'] }})">Watch</button>
-                            <button class="btn-book">Contact to Book</button>
-                        </div>
-                    </div>
 
-                    <!-- Route Map Section -->
-                    <div class="map-container mt-4 text-center" id="route-map-{{ result['LOAD_ID'] }}" style="display:none;">
-                        <h5 class="text-center">Route Map</h5>
-                        <img id="map-image-{{ result['LOAD_ID'] }}" class="img-fluid rounded" alt="Route Map">
+                        <!-- Route Map Section -->
+                        <div class="map-container mt-4 text-center" id="route-map-{{ result['LOAD_ID'] }}" style="display:none;">
+                            <h5 class="text-center">Route Map</h5>
+                            <img id="map-image-{{ result['LOAD_ID'] }}" class="img-fluid rounded" alt="Route Map">
+                        </div>
                     </div>
-                </div>
-                {% endfor %}
-            {% else %}
-                <p>No loads available. Please refine your search.</p>
+                    {% endfor %}
+
+                    <!-- Pagination Controls -->
+                    <nav aria-label="Page navigation example">
+                        <ul class="pagination justify-content-center mt-4">
+                            <!-- Previous Page Link -->
+                            {% if page > 1 %}
+                                <li class="page-item">
+                                    <a class="page-link" href="{{ url_for('index', 
+                                        origin_city=origin_city, 
+                                        origin_state=origin_state, 
+                                        dest_city=dest_city, 
+                                        dest_state=dest_state, 
+                                        type_truck=type_truck, 
+                                        radius=radius, 
+                                        weight=weight, 
+                                        page=page-1,
+                                        search=1
+                                    ) }}" aria-label="Previous">
+                                        <span aria-hidden="true">&laquo;</span>
+                                    </a>
+                                </li>
+                            {% else %}
+                                <li class="page-item disabled">
+                                    <span class="page-link" aria-label="Previous">
+                                        <span aria-hidden="true">&laquo;</span>
+                                    </span>
+                                </li>
+                            {% endif %}
+
+                            <!-- Page Number Links -->
+                            {% for p in range(1, total_pages + 1) %}
+                                {% if p == page %}
+                                    <li class="page-item active"><span class="page-link">{{ p }}</span></li>
+                                {% else %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="{{ url_for('index', 
+                                            origin_city=origin_city, 
+                                            origin_state=origin_state, 
+                                            dest_city=dest_city, 
+                                            dest_state=dest_state, 
+                                            type_truck=type_truck, 
+                                            radius=radius, 
+                                            weight=weight, 
+                                            page=p,
+                                            search=1
+                                        ) }}">{{ p }}</a>
+                                    </li>
+                                {% endif %}
+                            {% endfor %}
+
+                            <!-- Next Page Link -->
+                            {% if page < total_pages %}
+                                <li class="page-item">
+                                    <a class="page-link" href="{{ url_for('index', 
+                                        origin_city=origin_city, 
+                                        origin_state=origin_state, 
+                                        dest_city=dest_city, 
+                                        dest_state=dest_state, 
+                                        type_truck=type_truck, 
+                                        radius=radius, 
+                                        weight=weight, 
+                                        page=page+1,
+                                        search=1
+                                    ) }}" aria-label="Next">
+                                        <span aria-hidden="true">&raquo;</span>
+                                    </a>
+                                </li>
+                            {% else %}
+                                <li class="page-item disabled">
+                                    <span class="page-link" aria-label="Next">
+                                        <span aria-hidden="true">&raquo;</span>
+                                    </span>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                {% elif not results and (loads_in_origin_state or loads_in_dest_state) %}
+                    <!-- Prompt to view loads from origin state or to destination state -->
+                    <div class="alert alert-info mt-3">
+                        <p>No loads available between {% if origin_city %}{{ origin_city.title() }}, {% else %}Origin{% endif %}{% if origin_state %}{{ origin_state.upper() }}{% else %}N/A{% endif %} and {% if dest_city %}{{ dest_city.title() }}, {% else %}Destination{% endif %}{% if dest_state %}{{ dest_state.upper() }}{% else %}N/A{% endif %}.</p>
+                        <p>Would you like to see:</p>
+                        <form method="POST" id="state-loads-form">
+                            <input type="hidden" name="origin_city" value="{{ origin_city }}">
+                            <input type="hidden" name="origin_state" value="{{ origin_state }}">
+                            <input type="hidden" name="dest_city" value="{{ dest_city }}">
+                            <input type="hidden" name="dest_state" value="{{ dest_state }}">
+                            <input type="hidden" name="type_truck" value="{{ type_truck }}">
+                            <input type="hidden" name="radius" value="{{ radius }}">
+                            <input type="hidden" name="weight" value="{{ weight }}">
+                            <!-- Removed csrf_token since we're not using CSRF protection -->
+                            {% if loads_in_origin_state %}
+                                <button type="submit" name="view_state_loads" value="origin" class="btn btn-primary">Loads from Origin State ({{ origin_state.upper() }})</button>
+                            {% endif %}
+                            {% if loads_in_dest_state %}
+                                <button type="submit" name="view_state_loads" value="destination" class="btn btn-primary">Loads to Destination State ({{ dest_state.upper() }})</button>
+                            {% endif %}
+                        </form>
+                    </div>
+                {% elif search_performed and not results %}
+                    <p>No loads available. Please refine your search.</p>
+                {% endif %}
             {% endif %}
         </div> <!-- Close col-md-8 -->
     </div> <!-- Close row -->
@@ -121,74 +280,57 @@
 <!-- Scripts -->
 <script>
     // Origin City Change Event
-    document.getElementById('origin_city').addEventListener('change', function() {
+    document.getElementById('origin_city').addEventListener('change', function () {
         const selectedCity = this.value;
 
         fetch(`/get_states_for_city?city=${encodeURIComponent(selectedCity)}&type=origin`)
             .then(response => response.json())
             .then(data => {
-                const originStateDropdown = document.getElementById('origin_state');
-                originStateDropdown.innerHTML = ''; // Clear current states
-
-                if (data.states.length === 1) {
-                    // Only one state, automatically select it
-                    const option = document.createElement('option');
-                    option.value = data.states[0];
-                    option.textContent = data.states[0];
-                    originStateDropdown.appendChild(option);
+                if (data.states && data.states.length > 0) {
+                    updateStateDropdown(
+                        'origin_state',
+                        data.states
+                    );
                 } else {
-                    // Multiple states, let user select
-                    const defaultOption = document.createElement('option');
-                    defaultOption.value = '';
-                    defaultOption.textContent = 'Select Origin State';
-                    originStateDropdown.appendChild(defaultOption);
-
-                    data.states.forEach(state => {
-                        const option = document.createElement('option');
-                        option.value = state;
-                        option.textContent = state;
-                        originStateDropdown.appendChild(option);
-                    });
+                    alert(`No states found for the city: ${selectedCity}`);
                 }
-            });
+            })
+            .catch(error => console.error('Error fetching origin states:', error));
     });
 
     // Destination City Change Event
-    document.getElementById('dest_city').addEventListener('change', function() {
+    document.getElementById('dest_city').addEventListener('change', function () {
         const selectedCity = this.value;
 
         fetch(`/get_states_for_city?city=${encodeURIComponent(selectedCity)}&type=dest`)
             .then(response => response.json())
             .then(data => {
-                const destStateDropdown = document.getElementById('dest_state');
-                destStateDropdown.innerHTML = ''; // Clear current states
-
-                if (data.states.length === 1) {
-                    // Only one state, automatically select it
-                    const option = document.createElement('option');
-                    option.value = data.states[0];
-                    option.textContent = data.states[0];
-                    destStateDropdown.appendChild(option);
+                if (data.states && data.states.length > 0) {
+                    updateStateDropdown(
+                        'dest_state',
+                        data.states
+                    );
                 } else {
-                    // Multiple states, let user select
-                    const defaultOption = document.createElement('option');
-                    defaultOption.value = '';
-                    defaultOption.textContent = 'Select Destination State';
-                    destStateDropdown.appendChild(defaultOption);
-
-                    data.states.forEach(state => {
-                        const option = document.createElement('option');
-                        option.value = state;
-                        option.textContent = state;
-                        destStateDropdown.appendChild(option);
-                    });
+                    alert(`No states found for the city: ${selectedCity}`);
                 }
-            });
+            })
+            .catch(error => console.error('Error fetching destination states:', error));
+    });
+
+    document.getElementById('toggle-dashboard').addEventListener('click', function () {
+        const content = document.getElementById('dashboard-content');
+        if (content.style.display === 'none') {
+            content.style.display = 'block';
+            this.innerText = '-';
+        } else {
+            content.style.display = 'none';
+            this.innerText = '+';
+        }
     });
 
     // Function to Fetch and Display the Map
     function getMap(loadId) {
-        fetch(`/get_map?load_id=${loadId}`)
+        fetch(`/get_map?load_id=${encodeURIComponent(loadId)}`)
             .then(response => {
                 if (!response.ok) {
                     throw new Error('Network response was not ok');
@@ -204,6 +346,39 @@
                 console.error('There was a problem with the fetch operation:', error);
                 alert('Failed to load the map. Please try again later.');
             });
+    }
+
+    // Function to handle state dropdown updates
+    function updateStateDropdown(dropdownId, states) {
+        const dropdown = document.getElementById(dropdownId);
+        dropdown.innerHTML = ''; // Clear current options
+
+        if (states.length === 1) {
+            // Only one state, automatically select it
+            const option = document.createElement('option');
+            option.value = states[0];
+            option.textContent = states[0].toUpperCase();
+            dropdown.appendChild(option);
+        } else if (states.length > 1) {
+            // Multiple states, populate dropdown with all possible states
+            const defaultOption = document.createElement('option');
+            defaultOption.value = '';
+            defaultOption.textContent = 'Select a State';
+            dropdown.appendChild(defaultOption);
+
+            states.forEach(state => {
+                const option = document.createElement('option');
+                option.value = state;
+                option.textContent = state.toUpperCase();
+                dropdown.appendChild(option);
+            });
+        } else {
+            // No states found
+            const defaultOption = document.createElement('option');
+            defaultOption.value = '';
+            defaultOption.textContent = 'No State Available';
+            dropdown.appendChild(defaultOption);
+        }
     }
 </script>
 {% endblock %}
