@@ -34,6 +34,7 @@
     
     <!-- Get Directions Button -->
     <a href="{{ url_for('directions', load_id=load.LOAD_ID) }}" class="btn btn-primary mt-4">Get Directions</a>
+    <a href="{{ url_for('display_route', load_id=load.LOAD_ID) }}" class="btn btn-info mt-4">Display Route</a>
     
     <!-- Back to Search Results -->
     <a href="{{ url_for('index') }}" class="btn btn-secondary mt-4">Back to Search Results</a>

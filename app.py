@@ -894,6 +894,56 @@ def directions(load_id):
         directions=directions
     )
 
+@app.route('/route/<load_id>', methods=['GET'])
+def display_route(load_id):
+    logger.info(f"Fetching route for LOAD_ID: {load_id}")
+
+    # Ensure LOAD_ID is a string
+    load_id = str(load_id)
+
+    # Retrieve load details
+    postings_with_stops = get_postings_with_stops(posting_data, stop_data)
+    load_records = postings_with_stops[postings_with_stops['LOAD_ID'] == load_id].to_dict('records')
+
+    if not load_records:
+        flash(f"No load found with ID: {load_id}", "warning")
+        return redirect(url_for('index'))
+
+    load = load_records[0]
+    logger.info(f"Load data: {load}")
+
+    # Check for required keys
+    required_keys = [
+        'Pickup_City', 'Pickup_State',
+        'Destination_City', 'Destination_State',
+        'TOTAL_WEIGHT'
+    ]
+    missing_keys = [key for key in required_keys if key not in load]
+    if missing_keys:
+        logger.error(f"Missing keys in load data: {missing_keys}")
+        flash(
+            f"Load data is incomplete. Missing keys: {', '.join(missing_keys)}.",
+            "danger"
+        )
+        return redirect(url_for('index'))
+
+    # Fetch coordinates for pickup and destination
+    pickup_coords = get_coordinates(load['Pickup_City'], load['Pickup_State'])
+    destination_coords = get_coordinates(load['Destination_City'], load['Destination_State'])
+
+    if not pickup_coords or not destination_coords:
+        flash("Unable to retrieve coordinates for the specified locations.", "danger")
+        return redirect(url_for('load_details', load_id=load_id))
+
+    # Pass the necessary data to the template
+    return render_template(
+        'route.html',
+        load=load,
+        pickup_coords=pickup_coords,         # Tuple: (latitude, longitude)
+        destination_coords=destination_coords,  # Tuple: (latitude, longitude)
+        google_maps_api_key=google_maps_api_key
+    )
+
 
 
 if __name__ == '__main__':
