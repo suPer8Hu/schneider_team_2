@@ -36,77 +36,16 @@ google_maps_api_key = os.getenv('GOOGLE_MAPS_API_KEY')
 if not google_maps_api_key:
     logger.error("Error: The GOOGLE_MAPS_API_KEY environment variable is not set.")
     sys.exit(1)
-############################################################################
-############################################################################
-############################################################################
-############################################################################
-############################################################################
-############################################################################
 
 # Load CSV data with debugging
-import boto3
-import pandas as pd
-
-# Initialize DynamoDB resource
-dynamodb = boto3.resource(
-    'dynamodb',
-    region_name='us-east-2',
-
-)
-
-def load_data_from_table(table_name):
-    """
-    Load data from a DynamoDB table using scan.
-    
-    Parameters:
-        table_name (str): Name of the DynamoDB table.
-    
-    Returns:
-        list: List of items from the table.
-    """
-    table = dynamodb.Table(table_name)
-    data = []
-    response = table.scan()
-
-    # Append data from the initial scan
-    data.extend(response.get('Items', []))
-
-    # Continue scanning if more data is available
-    while 'LastEvaluatedKey' in response:
-        response = table.scan(ExclusiveStartKey=response['LastEvaluatedKey'])
-        data.extend(response.get('Items', []))
-    
-    return data
-
-# Load data from DynamoDB tables
-posting_data = load_data_from_table('load_postings')
-stop_data = load_data_from_table('load_stops')
-
-# Convert data to pandas DataFrames
-posting_data = pd.DataFrame(posting_data)
-stop_data = pd.DataFrame(stop_data)
-
-# Display information about the loaded data
-print(f"Loaded {len(posting_data)} records from 'load_posting'")
-print(f"Loaded {len(stop_data)} records from 'load_stop'")
-print(posting_data.head())
-print(stop_data.head())
-
-
-
-
-############################################################################
-############################################################################
-############################################################################
-############################################################################
-############################################################################
-############################################################################
-
-
-
-
-
-
+try:
+    posting_data = pd.read_csv("load_posting.csv", dtype={'LOAD_ID': str, 'TRANSPORT_MODE': str, 'TOTAL_WEIGHT': float})
+    stop_data = pd.read_csv("load_stop.csv", dtype={'LOAD_ID': str, 'STOP_TYPE': str, 'CITY': str, 'STATE': str})
+    logger.info(f"Loaded {len(posting_data)} records from load_posting.csv")
+    logger.info(f"Loaded {len(stop_data)} records from load_stop.csv")
+except FileNotFoundError as e:
+    logger.error(f"Error: {e}")
+    sys.exit(1)
 
 # Ensure LOAD_ID columns are strings
 posting_data['LOAD_ID'] = posting_data['LOAD_ID'].astype(str)
@@ -157,13 +96,6 @@ routes = pd.merge(
 #         except Exception as e:
 #             logger.error(f"Geocoding error for {city_state}: {e}")
 #             return None
-
-
-
-
-
-
-
 
 def get_postings_with_stops(posting_data, stop_data):
     """
@@ -371,10 +303,9 @@ def search_loads(
             filtered_data['distance'] = filtered_data['Pickup_Coords'].apply(
                 lambda coords: geodesic(origin_coords, coords).miles
             )
-            
+
             # Filter by radius
             filtered_data = filtered_data[filtered_data['distance'] <= radius]
-            print(filtered_data)
             logger.info(f"After applying radius <= {radius} miles: {len(filtered_data)} records")
         else:
             # No loads in city and no radius specified
@@ -470,14 +401,6 @@ def index():
     dest_state = ''
     weight = 25000  # Default weight
 
-    type_truck = request.cookies.get('type_truck', 'Dry Van')
-    radius = float(request.cookies.get('radius', 200))
-    weight = float(request.cookies.get('weight', 25000))
-    origin_city = request.cookies.get('origin_city', '')
-    origin_state = request.cookies.get('origin_state', '')
-    dest_city = request.cookies.get('dest_city', '')
-    dest_state = request.cookies.get('dest_state', '')
-    
     # Initialize flags
     loads_in_origin_state = False
     loads_in_dest_state = False
@@ -498,15 +421,6 @@ def index():
         type_truck = request.form.get('type_truck', '').strip() or 'Dry Van'
         radius = float(request.form.get('radius', 200))
         weight = float(request.form.get('weight', 25000))
-        
-        response = redirect(url_for('index', page=page))
-        response.set_cookie('type_truck', type_truck, max_age=3600)  # Expires in 1 hour
-        response.set_cookie('radius', str(radius), max_age=3600)
-        response.set_cookie('weight', str(weight), max_age=3600)
-        response.set_cookie('origin_city', origin_city, max_age=3600)
-        response.set_cookie('origin_state', origin_state, max_age=3600)
-        response.set_cookie('dest_city', dest_city, max_age=3600)
-        response.set_cookie('dest_state', dest_state, max_age=3600)
 
         # Reset to first page upon new search
         page = 1
