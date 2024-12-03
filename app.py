@@ -917,23 +917,39 @@ def load_details(load_id):
     )
 
 
-def calculate_fuel_efficiency(total_miles, truck_weight, base_efficiency=6.0):
+from decimal import Decimal
+
+def calculate_fuel_efficiency(total_miles, truck_weight, base_efficiency=Decimal('6.0')):
     """
     Calculate estimated fuel consumption (miles per gallon) based on truck load.
 
-    :param total_miles: Total distance in miles.
-    :param truck_weight: Weight of the truck load in pounds.
-    :param base_efficiency: Base miles per gallon for an empty truck.
+    :param total_miles: Total distance in miles (int, float, or Decimal).
+    :param truck_weight: Weight of the truck load in pounds (int, float, or Decimal).
+    :param base_efficiency: Base miles per gallon for an empty truck (Decimal).
     :return: Total fuel consumption (gallons) and adjusted miles per gallon (MPG).
     """
-    # Assume efficiency decreases by 0.01 MPG for every 1,000 lbs of weight
-    weight_factor = truck_weight / 1000 * 0.01
-    adjusted_efficiency = max(base_efficiency - weight_factor, 3.0)  # Minimum MPG is 3
+    # Convert inputs to Decimal
+    total_miles = Decimal(total_miles)
+    truck_weight = Decimal(truck_weight)
+
+    # Validate inputs
+    if total_miles <= 0:
+        raise ValueError("Invalid total miles. Must be a positive number.")
+    if truck_weight < 0:
+        raise ValueError("Invalid truck weight. Must be a non-negative number.")
+    if base_efficiency <= 0:
+        raise ValueError("Invalid base efficiency. Must be a positive number.")
+
+    # Calculate efficiency
+    weight_factor = truck_weight / Decimal('1000') * Decimal('0.01')
+    adjusted_efficiency = max(base_efficiency - weight_factor, Decimal('3.0'))  # Minimum MPG is 3
     fuel_consumption = total_miles / adjusted_efficiency
+
     return {
-        'adjusted_efficiency': adjusted_efficiency,
-        'fuel_consumption': round(fuel_consumption, 2)  # Round to 2 decimal places
+        'adjusted_efficiency': round(adjusted_efficiency, 2),
+        'fuel_consumption': round(fuel_consumption, 2)
     }
+
 
 @app.route('/directions/<load_id>', methods=['GET'])
 def directions(load_id):
