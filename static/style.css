@@ -1,0 +1,188 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f9;
+    color: #333;
+}
+
+header {
+    background-color: #002f63;
+    color: white;
+    padding: 20px;
+    text-align: center;
+}
+
+.container {
+    width: 80%;
+    margin: 20px auto;
+}
+
+form {
+    display: grid;
+    gap: 15px;
+    background-color: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.form-group label {
+    font-weight: bold;
+}
+
+input[type="text"], input[type="number"], button {
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+button {
+    background-color: #002f63;
+    color: white;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+.results h3 {
+    margin-top: 20px;
+    color: #002f63;
+}
+
+.results ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+.results ul li {
+    padding: 5px;
+    border-bottom: 1px solid #ddd;
+}
+
+.dashboard-widget .card-header {
+    color: #FF8800; /* Schneider orange color */
+    font-weight: bold;
+    font-size: 1.2rem;
+    text-align: center;
+    background-color: #FFFFFF;
+    border-bottom: 1px solid #ddd;
+}
+
+
+.hidden {
+    display: none;
+    transition: all 0.3s ease; /* Optional: Adds a smooth transition effect */
+}
+
+/* Style for the Search Button */
+.btn-search {
+    background-color: #FF8800; /* Schneider orange color */
+    color: #FFFFFF; /* White text */
+    border: none; /* Remove border */
+    padding: 10px 15px; /* Adjust padding */
+    font-size: 16px; /* Increase font size */
+    font-weight: bold; /* Make text bold */
+    border-radius: 5px; /* Rounded corners */
+    cursor: pointer; /* Pointer cursor on hover */
+    transition: background-color 0.3s ease, transform 0.2s ease; /* Smooth transitions */
+}
+
+.btn-search:hover {
+    background-color: #e67700; /* Darker orange on hover */
+    transform: scale(1.05); /* Slightly enlarge on hover */
+}
+
+.btn-search:active {
+    background-color: #cc6c00; /* Even darker orange on click */
+    transform: scale(0.95); /* Slightly shrink on click */
+}
+
+.form-range {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 8px;
+    border-radius: 5px;
+    background: #ddd;
+    outline: none;
+    opacity: 0.9;
+    transition: opacity 0.2s;
+}
+
+.form-range:hover {
+    opacity: 1;
+}
+
+.form-range::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #FF8800; /* Orange thumb */
+    cursor: pointer;
+}
+
+.form-range::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #FF8800; /* Orange thumb */
+    cursor: pointer;
+}
+
+#dashboard-container {
+    transition: opacity 0.3s ease-in-out;
+}
+.hidden {
+    opacity: 0;
+    visibility: hidden;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f9f9f9;
+    margin: 0;
+    padding: 0;
+}
+
+.container {
+    max-width: 800px;
+    margin: 20px auto;
+    background: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+h2, h4 {
+    color: #333;
+}
+
+p {
+    font-size: 1rem;
+    margin: 5px 0;
+}
+
+.alert-warning {
+    background-color: #ffeeba;
+    padding: 15px;
+    border-radius: 5px;
+    color: #856404;
+}
+
+.btn {
+    text-decoration: none;
+    display: inline-block;
+    padding: 10px 20px;
+    font-size: 1rem;
+    border-radius: 5px;
+    background-color: #6c757d;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+}
+
+.btn:hover {
+    background-color: #5a6268;
+}
+
+

@@ -1,0 +1,77 @@
+<!-- templates/route.html -->
+{% extends "base.html" %}
+
+{% block title %}Route Map{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2 class="mt-4">Route Map for Load ID: {{ load.LOAD_ID }}</h2>
+    
+    <!-- Load Information -->
+    <div class="load-info mt-3">
+        <p><strong>Transport Mode:</strong> {{ load.TRANSPORT_MODE }}</p>
+        <p><strong>Total Weight:</strong> {{ load.TOTAL_WEIGHT }} lbs</p>
+        <p><strong>Origin:</strong> {{ load.Pickup_City.title() }}, {{ load.Pickup_State.upper() }}</p>
+        <p><strong>Destination:</strong> {{ load.Destination_City.title() }}, {{ load.Destination_State.upper() }}</p>
+    </div>
+    
+    <!-- Google Map -->
+    <div id="map" style="height: 500px; width: 100%;"></div>
+    
+    <!-- Action Buttons -->
+    <a href="{{ url_for('load_details', load_id=load.LOAD_ID) }}" class="btn btn-secondary mt-4">Back to Load Details</a>
+    <a href="{{ url_for('index') }}" class="btn btn-secondary mt-4">Back to Search Results</a>
+</div>
+
+<!-- Google Maps JavaScript API -->
+<script src="https://maps.googleapis.com/maps/api/js?key={{ google_maps_api_key }}&libraries=places"></script>
+<script>
+    function initMap() {
+        var pickup = { lat: {{ pickup_coords[0] }}, lng: {{ pickup_coords[1] }} };
+        var destination = { lat: {{ destination_coords[0] }}, lng: {{ destination_coords[1] }} };
+        
+        // Initialize the map centered between pickup and destination
+        var map = new google.maps.Map(document.getElementById('map'), {
+            center: { lat: (pickup.lat + destination.lat) / 2, lng: (pickup.lng + destination.lng) / 2 },
+            zoom: 6
+        });
+        
+        // Set up the directions service and renderer
+        var directionsService = new google.maps.DirectionsService();
+        var directionsRenderer = new google.maps.DirectionsRenderer();
+        directionsRenderer.setMap(map);
+        
+        // Define the request for driving directions
+        var request = {
+            origin: pickup,
+            destination: destination,
+            travelMode: 'DRIVING'
+        };
+        
+        // Route the directions and pass the response to the renderer
+        directionsService.route(request, function(result, status) {
+            if (status == 'OK') {
+                directionsRenderer.setDirections(result);
+            } else {
+                alert('Directions request failed due to ' + status);
+            }
+        });
+        
+        // Add markers for pickup and destination
+        new google.maps.Marker({
+            position: pickup,
+            map: map,
+            title: 'Pickup Location'
+        });
+        
+        new google.maps.Marker({
+            position: destination,
+            map: map,
+            title: 'Destination Location'
+        });
+    }
+    
+    // Initialize the map once the window has loaded
+    window.onload = initMap;
+</script>
+{% endblock %}

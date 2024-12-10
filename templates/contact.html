@@ -1,0 +1,20 @@
+<!-- templates/contact.html -->
+{% extends "base.html" %}
+
+{% block title %}Contact{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Header with Logo -->
+    <div class="header">
+        <img src="{{ url_for('static', filename='schneider_logo.png') }}" alt="Schneider Logo">
+        <h1>Contact Us</h1>
+    </div>
+
+    <div class="content">
+        <p>If you have any questions or need assistance, feel free to reach out to us at:</p>
+        <p><strong>Email:</strong> support@freightloadsearch.com</p>
+        <p><strong>Phone:</strong> +1 (800) 555-0199</p>
+    </div>
+</div>
+{% endblock %}

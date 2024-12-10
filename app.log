@@ -1,0 +1,35 @@
+2024-10-17 16:34:35,160 ERROR Error loading CSV files: [Errno 2] No such file or directory: '/Users/harshsahay/Desktop/Schneider_App/load_stop.csvv'
+2024-10-17 16:34:35,162 ERROR Error during data cleaning: name 'load_stop' is not defined
+2024-10-17 16:34:35,215 INFO [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5000
+2024-10-17 16:34:35,215 INFO [33mPress CTRL+C to quit[0m
+2024-10-17 16:34:35,216 INFO  * Restarting with stat
+2024-10-17 16:34:35,613 ERROR Error loading CSV files: [Errno 2] No such file or directory: '/Users/harshsahay/Desktop/Schneider_App/load_stop.csvv'
+2024-10-17 16:34:35,615 ERROR Error during data cleaning: name 'load_stop' is not defined
+2024-10-17 16:34:35,641 WARNING  * Debugger is active!
+2024-10-17 16:34:35,647 INFO  * Debugger PIN: 330-021-340
+2024-10-17 16:35:39,109 INFO 127.0.0.1 - - [17/Oct/2024 16:35:39] "GET / HTTP/1.1" 200 -
+2024-10-17 16:35:39,827 INFO 127.0.0.1 - - [17/Oct/2024 16:35:39] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
+2024-10-17 16:37:07,403 INFO Search initiated with filters - Trailer Type: van, Origin: chicago, Illinois, Destination: Las Vegas, Nevada, Pickup Date: 2024-09-09, Delivery Date: 2024-09-13, Hazardous: False, High Value: False
+2024-10-17 16:37:07,428 INFO 127.0.0.1 - - [17/Oct/2024 16:37:07] "[35m[1mPOST / HTTP/1.1[0m" 500 -
+2024-10-17 16:37:07,625 INFO 127.0.0.1 - - [17/Oct/2024 16:37:07] "GET /?__debugger__=yes&cmd=resource&f=style.css HTTP/1.1" 200 -
+2024-10-17 16:37:07,627 INFO 127.0.0.1 - - [17/Oct/2024 16:37:07] "GET /?__debugger__=yes&cmd=resource&f=debugger.js HTTP/1.1" 200 -
+2024-10-17 16:37:07,674 INFO 127.0.0.1 - - [17/Oct/2024 16:37:07] "GET /?__debugger__=yes&cmd=resource&f=console.png&s=yZZJjHL4E57LRhyyT3iq HTTP/1.1" 200 -
+2024-10-17 16:37:07,744 INFO 127.0.0.1 - - [17/Oct/2024 16:37:07] "GET /?__debugger__=yes&cmd=resource&f=console.png HTTP/1.1" 200 -
+2024-10-17 16:37:56,380 ERROR Error loading CSV files: [Errno 2] No such file or directory: '/Users/harshsahay/Desktop/Schneider_App/load_stop.csvv'
+2024-10-17 16:37:56,381 ERROR Error during data cleaning: name 'load_stop' is not defined
+2024-10-17 16:37:56,420 INFO [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5000
+2024-10-17 16:37:56,420 INFO [33mPress CTRL+C to quit[0m
+2024-10-17 16:37:56,420 INFO  * Restarting with stat
+2024-10-17 16:37:56,759 ERROR Error loading CSV files: [Errno 2] No such file or directory: '/Users/harshsahay/Desktop/Schneider_App/load_stop.csvv'
+2024-10-17 16:37:56,760 ERROR Error during data cleaning: name 'load_stop' is not defined
+2024-10-17 16:37:56,787 WARNING  * Debugger is active!
+2024-10-17 16:37:56,793 INFO  * Debugger PIN: 330-021-340
+2024-10-17 16:38:11,660 INFO 127.0.0.1 - - [17/Oct/2024 16:38:11] "GET / HTTP/1.1" 200 -
+2024-10-17 16:38:26,849 INFO Search initiated with filters - Trailer Type: van, Origin: chicago, Illinois, Destination: Las Vegas, Nevada, Pickup Date: 2024-09-09, Delivery Date: 2024-09-10, Hazardous: True, High Value: True
+2024-10-17 16:38:26,871 INFO 127.0.0.1 - - [17/Oct/2024 16:38:26] "[35m[1mPOST / HTTP/1.1[0m" 500 -
+2024-10-17 16:38:26,951 INFO 127.0.0.1 - - [17/Oct/2024 16:38:26] "[36mGET /?__debugger__=yes&cmd=resource&f=debugger.js HTTP/1.1[0m" 304 -
+2024-10-17 16:38:26,952 INFO 127.0.0.1 - - [17/Oct/2024 16:38:26] "[36mGET /?__debugger__=yes&cmd=resource&f=style.css HTTP/1.1[0m" 304 -
+2024-10-17 16:38:26,980 INFO 127.0.0.1 - - [17/Oct/2024 16:38:26] "GET /?__debugger__=yes&cmd=resource&f=console.png&s=rjmfY0t7pBw201OQeL8M HTTP/1.1" 200 -
+2024-10-17 16:38:27,017 INFO 127.0.0.1 - - [17/Oct/2024 16:38:27] "[36mGET /?__debugger__=yes&cmd=resource&f=console.png HTTP/1.1[0m" 304 -

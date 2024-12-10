@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Carrier Match</title>
+</head>
+<body>
+    <h1>Best Carrier Match</h1>
+    {% if carrier %}
+        <p>Carrier ID: {{ carrier.carrier_id }}</p>
+        <p>Capacity: {{ carrier.capacity }}</p>
+        <p>Location: {{ carrier.location }}</p>
+    {% else %}
+        <p>No suitable carrier found for this load.</p>
+    {% endif %}
+</body>
+</html>

@@ -1,0 +1,119 @@
+<!-- templates/dashboard.html -->
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2>Dashboard</h2>
+    
+    <!-- Transport Mode Distribution -->
+    <div class="card mb-4">
+        <div class="card-header">Transport Mode Distribution</div>
+        <div class="card-body">
+            {% if transport_mode_counts %}
+                <ul>
+                    {% for mode, count in transport_mode_counts.items() %}
+                        <li><span class="stat-title">{{ mode }}:</span> {{ count }}</li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p>No data available.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Top Pickup Cities -->
+    <div class="card mb-4">
+        <div class="card-header">Top Pickup Cities</div>
+        <div class="card-body">
+            {% if pickup_stats %}
+                <ul>
+                    {% for city, count in pickup_stats.items() %}
+                        <li><span class="stat-title">{{ city }}:</span> {{ count }} pickups</li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p>No data available.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Top Drop-off Cities -->
+    <div class="card mb-4">
+        <div class="card-header">Top Drop-off Cities</div>
+        <div class="card-body">
+            {% if dropoff_stats %}
+                <ul>
+                    {% for city, count in dropoff_stats.items() %}
+                        <li><span class="stat-title">{{ city }}:</span> {{ count }} drop-offs</li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p>No data available.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Average Weight by Transport Mode and Stop Type -->
+    <div class="card mb-4">
+        <div class="card-header">Average Weight by Transport Mode and Stop Type</div>
+        <div class="card-body">
+            {% if avg_weight_by_mode %}
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>Transport Mode</th>
+                            <th>Stop Type</th>
+                            <th>Average Weight (lb)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for entry in avg_weight_by_mode %}
+                            <tr>
+                                <td>{{ entry['TRANSPORT_MODE'] }}</td>
+                                <td>{{ entry['STOP_TYPE'] }}</td>
+                                <td>{{ entry['average_weight'] | round(2) }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <p>No data available.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Top City Pairs with Active Routes -->
+    <div class="card mb-4">
+        <div class="card-header">Top City Pairs with Active Routes</div>
+        <div class="card-body">
+            {% if active_routes %}
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>Origin City</th>
+                            <th>Origin State</th>
+                            <th>Destination City</th>
+                            <th>Destination State</th>
+                            <th>Count</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for route in active_routes %}
+                            <tr>
+                                <td>{{ route['Origin_City'] }}</td>
+                                <td>{{ route['Origin_State'] }}</td>
+                                <td>{{ route['Dest_City'] }}</td>
+                                <td>{{ route['Dest_State'] }}</td>
+                                <td>{{ route['count'] }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <p>No data available.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
