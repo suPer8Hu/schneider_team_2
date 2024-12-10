@@ -36,12 +36,13 @@ google_maps_api_key = os.getenv('GOOGLE_MAPS_API_KEY')
 if not google_maps_api_key:
     logger.error("Error: The GOOGLE_MAPS_API_KEY environment variable is not set.")
     sys.exit(1)
-############################################################################
-############################################################################
-############################################################################
-############################################################################
-############################################################################
-############################################################################
+
+
+
+
+
+
+
 
 # Load CSV data with debugging
 import boto3
@@ -96,18 +97,6 @@ print(stop_data.head())
 
 
 
-############################################################################
-############################################################################
-############################################################################
-############################################################################
-############################################################################
-############################################################################
-
-
-
-
-
-
 
 # Ensure LOAD_ID columns are strings
 posting_data['LOAD_ID'] = posting_data['LOAD_ID'].astype(str)
@@ -129,38 +118,6 @@ routes = pd.merge(
     on='LOAD_ID',
     suffixes=('_origin', '_dest')
 )
-
-# # Initialize geolocator
-# geolocator = Nominatim(user_agent="freight_load_search_app")
-
-# # Initialize an LRU cache for coordinates
-# coordinate_cache = LRUCache(maxsize=10000)
-
-# @cached(coordinate_cache)
-# def get_coordinates(city, state):
-#     """Retrieve coordinates for the given city and state."""
-#     city_state = f"{city}, {state}"
-#     if city_state in city_coords:
-#         return city_coords[city_state]
-#     else:
-#         try:
-#             location = geolocator.geocode(city_state, timeout=10)
-#             if location:
-#                 coords = (location.latitude, location.longitude)
-#                 city_coords[city_state] = coords
-#                 # Optionally, save updated coordinates to 'city_coords.pkl'
-#                 with open('city_coords.pkl', 'wb') as f:
-#                     pickle.dump(city_coords, f)
-#                 return coords
-#             else:
-#                 logger.warning(f"Could not find coordinates for {city_state}")
-#                 return None
-#         except Exception as e:
-#             logger.error(f"Geocoding error for {city_state}: {e}")
-#             return None
-
-
-
 
 
 
@@ -1046,8 +1003,6 @@ def display_route(load_id):
         destination_coords=destination_coords,  # Tuple: (latitude, longitude)
         google_maps_api_key=google_maps_api_key
     )
-
-
-
+    
 if __name__ == '__main__':
     app.run(debug=True)
