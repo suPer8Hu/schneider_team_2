@@ -52,6 +52,9 @@
    Open your browser and navigate to:
    [http://127.0.0.1:5000](http://127.0.0.1:5000)
 
+7. **Working app**:
+    ![Working App](static/Working_app.png)
+
 ---
 
 ## Overview of How the Code Works
