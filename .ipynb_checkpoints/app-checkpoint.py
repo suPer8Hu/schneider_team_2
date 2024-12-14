@@ -36,8 +36,12 @@ google_maps_api_key = os.getenv('GOOGLE_MAPS_API_KEY')
 if not google_maps_api_key:
     logger.error("Error: The GOOGLE_MAPS_API_KEY environment variable is not set.")
     sys.exit(1)
-
-
+############################################################################
+############################################################################
+############################################################################
+############################################################################
+############################################################################
+############################################################################
 
 # Load CSV data with debugging
 import boto3
@@ -47,8 +51,7 @@ import pandas as pd
 dynamodb = boto3.resource(
     'dynamodb',
     region_name='us-east-2',
-    aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'),
-    aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY')
+
 )
 
 def load_data_from_table(table_name):
@@ -90,21 +93,18 @@ print(posting_data.head())
 print(stop_data.head())
 
 
-genai_api_key = os.getenv('GOOGLE_GENAI_API_KEY')
-if not genai_api_key:
-    logger.error("Error: The GOOGLE_GENAI_API_KEY environment variable is not set.")
-    sys.exit(1)
 
-@app.route('/get-api-key', methods=['GET'])
-def get_api_key():
-    """
-    Provide the Google Generative AI API Key securely.
-    """
-    try:
-        return jsonify({'key': genai_api_key})
-    except Exception as e:
-        logger.error(f"Failed to retrieve API Key: {e}")
-        return jsonify({'error': 'Unable to retrieve API Key'}), 500
+
+############################################################################
+############################################################################
+############################################################################
+############################################################################
+############################################################################
+############################################################################
+
+
+
+
 
 
 
@@ -128,6 +128,38 @@ routes = pd.merge(
     on='LOAD_ID',
     suffixes=('_origin', '_dest')
 )
+
+# # Initialize geolocator
+# geolocator = Nominatim(user_agent="freight_load_search_app")
+
+# # Initialize an LRU cache for coordinates
+# coordinate_cache = LRUCache(maxsize=10000)
+
+# @cached(coordinate_cache)
+# def get_coordinates(city, state):
+#     """Retrieve coordinates for the given city and state."""
+#     city_state = f"{city}, {state}"
+#     if city_state in city_coords:
+#         return city_coords[city_state]
+#     else:
+#         try:
+#             location = geolocator.geocode(city_state, timeout=10)
+#             if location:
+#                 coords = (location.latitude, location.longitude)
+#                 city_coords[city_state] = coords
+#                 # Optionally, save updated coordinates to 'city_coords.pkl'
+#                 with open('city_coords.pkl', 'wb') as f:
+#                     pickle.dump(city_coords, f)
+#                 return coords
+#             else:
+#                 logger.warning(f"Could not find coordinates for {city_state}")
+#                 return None
+#         except Exception as e:
+#             logger.error(f"Geocoding error for {city_state}: {e}")
+#             return None
+
+
+
 
 
 
@@ -1013,6 +1045,8 @@ def display_route(load_id):
         destination_coords=destination_coords,  # Tuple: (latitude, longitude)
         google_maps_api_key=google_maps_api_key
     )
-    
+
+
+
 if __name__ == '__main__':
     app.run(debug=True)

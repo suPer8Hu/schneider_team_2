@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Track Load</title>
+</head>
+<body>
+    <h1>Real-Time Load Tracking</h1>
+    {% if map_image %}
+        <img src="data:image/png;base64,{{ map_image }}">
+    {% else %}
+        <p>Map image not available.</p>
+    {% endif %}
+    <p>Current Location: {{ location.city }}, {{ location.state }}</p>
+</body>
+</html>

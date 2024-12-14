@@ -1,0 +1,42 @@
+<!-- templates/load_details.html -->
+{% extends "base.html" %}
+
+{% block title %}Load Details{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2 class="mt-4">Load Details for Load ID: {{ load.LOAD_ID }}</h2>
+    
+    <!-- Load Information -->
+    <div class="load-info mt-3">
+        <p><strong>Transport Mode:</strong> {{ load.TRANSPORT_MODE }}</p>
+        <p><strong>Total Weight:</strong> {{ load.TOTAL_WEIGHT }} lbs</p>
+        <p><strong>Origin:</strong> {{ load.Pickup_City.title() }}, {{ load.Pickup_State.upper() }}</p>
+        <p><strong>Destination:</strong> {{ load.Destination_City.title() }}, {{ load.Destination_State.upper() }}</p>
+    </div>
+    
+    <!-- Mileage Information -->
+    {% if mileage_info %}
+    <div class="mileage-info mt-3">
+        <h4>Mileage Information</h4>
+        <p><strong>Total Miles:</strong> {{ mileage_info.total_miles }}</p>
+        <p><strong>Total Hours:</strong> {{ mileage_info.total_hours }}</p>
+        <p><strong>Estimated Tolls:</strong> {{ mileage_info.estimated_tolls }}</p>
+        <p><strong>Estimated GHG:</strong> {{ mileage_info.estimated_ghg }}</p>
+        <p><strong>Adjusted Efficiency:</strong> {{ mileage_info.adjusted_efficiency }}</p>
+        <p><strong>Fuel Consumption:</strong> {{ mileage_info.fuel_consumption }} gallons</p>
+    </div>
+    {% else %}
+    <div class="alert alert-warning mt-3">
+        <p>Unable to retrieve mileage information at this time.</p>
+    </div>
+    {% endif %}
+    
+    <!-- Get Directions Button -->
+    <a href="{{ url_for('directions', load_id=load.LOAD_ID) }}" class="btn btn-primary mt-4">Get Directions</a>
+    <a href="{{ url_for('display_route', load_id=load.LOAD_ID) }}" class="btn btn-info mt-4">Display Route</a>
+    
+    <!-- Back to Search Results -->
+    <a href="{{ url_for('index') }}" class="btn btn-secondary mt-4">Back to Search Results</a>
+</div>
+{% endblock %}

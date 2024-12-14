@@ -37,76 +37,15 @@ if not google_maps_api_key:
     logger.error("Error: The GOOGLE_MAPS_API_KEY environment variable is not set.")
     sys.exit(1)
 
-
-
 # Load CSV data with debugging
-import boto3
-import pandas as pd
-
-# Initialize DynamoDB resource
-dynamodb = boto3.resource(
-    'dynamodb',
-    region_name='us-east-2',
-    aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'),
-    aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY')
-)
-
-def load_data_from_table(table_name):
-    """
-    Load data from a DynamoDB table using scan.
-    
-    Parameters:
-        table_name (str): Name of the DynamoDB table.
-    
-    Returns:
-        list: List of items from the table.
-    """
-    table = dynamodb.Table(table_name)
-    data = []
-    response = table.scan()
-
-    # Append data from the initial scan
-    data.extend(response.get('Items', []))
-
-    # Continue scanning if more data is available
-    while 'LastEvaluatedKey' in response:
-        response = table.scan(ExclusiveStartKey=response['LastEvaluatedKey'])
-        data.extend(response.get('Items', []))
-    
-    return data
-
-# Load data from DynamoDB tables
-posting_data = load_data_from_table('load_postings')
-stop_data = load_data_from_table('load_stops')
-
-# Convert data to pandas DataFrames
-posting_data = pd.DataFrame(posting_data)
-stop_data = pd.DataFrame(stop_data)
-
-# Display information about the loaded data
-print(f"Loaded {len(posting_data)} records from 'load_posting'")
-print(f"Loaded {len(stop_data)} records from 'load_stop'")
-print(posting_data.head())
-print(stop_data.head())
-
-
-genai_api_key = os.getenv('GOOGLE_GENAI_API_KEY')
-if not genai_api_key:
-    logger.error("Error: The GOOGLE_GENAI_API_KEY environment variable is not set.")
+try:
+    posting_data = pd.read_csv("load_posting.csv", dtype={'LOAD_ID': str, 'TRANSPORT_MODE': str, 'TOTAL_WEIGHT': float})
+    stop_data = pd.read_csv("load_stop.csv", dtype={'LOAD_ID': str, 'STOP_TYPE': str, 'CITY': str, 'STATE': str})
+    logger.info(f"Loaded {len(posting_data)} records from load_posting.csv")
+    logger.info(f"Loaded {len(stop_data)} records from load_stop.csv")
+except FileNotFoundError as e:
+    logger.error(f"Error: {e}")
     sys.exit(1)
-
-@app.route('/get-api-key', methods=['GET'])
-def get_api_key():
-    """
-    Provide the Google Generative AI API Key securely.
-    """
-    try:
-        return jsonify({'key': genai_api_key})
-    except Exception as e:
-        logger.error(f"Failed to retrieve API Key: {e}")
-        return jsonify({'error': 'Unable to retrieve API Key'}), 500
-
-
 
 # Ensure LOAD_ID columns are strings
 posting_data['LOAD_ID'] = posting_data['LOAD_ID'].astype(str)
@@ -129,9 +68,34 @@ routes = pd.merge(
     suffixes=('_origin', '_dest')
 )
 
+# # Initialize geolocator
+# geolocator = Nominatim(user_agent="freight_load_search_app")
 
+# # Initialize an LRU cache for coordinates
+# coordinate_cache = LRUCache(maxsize=10000)
 
-
+# @cached(coordinate_cache)
+# def get_coordinates(city, state):
+#     """Retrieve coordinates for the given city and state."""
+#     city_state = f"{city}, {state}"
+#     if city_state in city_coords:
+#         return city_coords[city_state]
+#     else:
+#         try:
+#             location = geolocator.geocode(city_state, timeout=10)
+#             if location:
+#                 coords = (location.latitude, location.longitude)
+#                 city_coords[city_state] = coords
+#                 # Optionally, save updated coordinates to 'city_coords.pkl'
+#                 with open('city_coords.pkl', 'wb') as f:
+#                     pickle.dump(city_coords, f)
+#                 return coords
+#             else:
+#                 logger.warning(f"Could not find coordinates for {city_state}")
+#                 return None
+#         except Exception as e:
+#             logger.error(f"Geocoding error for {city_state}: {e}")
+#             return None
 
 def get_postings_with_stops(posting_data, stop_data):
     """
@@ -339,10 +303,9 @@ def search_loads(
             filtered_data['distance'] = filtered_data['Pickup_Coords'].apply(
                 lambda coords: geodesic(origin_coords, coords).miles
             )
-            
+
             # Filter by radius
             filtered_data = filtered_data[filtered_data['distance'] <= radius]
-            print(filtered_data)
             logger.info(f"After applying radius <= {radius} miles: {len(filtered_data)} records")
         else:
             # No loads in city and no radius specified
@@ -438,14 +401,6 @@ def index():
     dest_state = ''
     weight = 25000  # Default weight
 
-    type_truck = request.cookies.get('type_truck', 'Dry Van')
-    radius = float(request.cookies.get('radius', 200))
-    weight = float(request.cookies.get('weight', 25000))
-    origin_city = request.cookies.get('origin_city', '')
-    origin_state = request.cookies.get('origin_state', '')
-    dest_city = request.cookies.get('dest_city', '')
-    dest_state = request.cookies.get('dest_state', '')
-    
     # Initialize flags
     loads_in_origin_state = False
     loads_in_dest_state = False
@@ -466,15 +421,6 @@ def index():
         type_truck = request.form.get('type_truck', '').strip() or 'Dry Van'
         radius = float(request.form.get('radius', 200))
         weight = float(request.form.get('weight', 25000))
-        
-        response = redirect(url_for('index', page=page))
-        response.set_cookie('type_truck', type_truck, max_age=3600)  # Expires in 1 hour
-        response.set_cookie('radius', str(radius), max_age=3600)
-        response.set_cookie('weight', str(weight), max_age=3600)
-        response.set_cookie('origin_city', origin_city, max_age=3600)
-        response.set_cookie('origin_state', origin_state, max_age=3600)
-        response.set_cookie('dest_city', dest_city, max_age=3600)
-        response.set_cookie('dest_state', dest_state, max_age=3600)
 
         # Reset to first page upon new search
         page = 1
@@ -885,39 +831,23 @@ def load_details(load_id):
     )
 
 
-from decimal import Decimal
-
-def calculate_fuel_efficiency(total_miles, truck_weight, base_efficiency=Decimal('6.0')):
+def calculate_fuel_efficiency(total_miles, truck_weight, base_efficiency=6.0):
     """
     Calculate estimated fuel consumption (miles per gallon) based on truck load.
 
-    :param total_miles: Total distance in miles (int, float, or Decimal).
-    :param truck_weight: Weight of the truck load in pounds (int, float, or Decimal).
-    :param base_efficiency: Base miles per gallon for an empty truck (Decimal).
+    :param total_miles: Total distance in miles.
+    :param truck_weight: Weight of the truck load in pounds.
+    :param base_efficiency: Base miles per gallon for an empty truck.
     :return: Total fuel consumption (gallons) and adjusted miles per gallon (MPG).
     """
-    # Convert inputs to Decimal
-    total_miles = Decimal(total_miles)
-    truck_weight = Decimal(truck_weight)
-
-    # Validate inputs
-    if total_miles <= 0:
-        raise ValueError("Invalid total miles. Must be a positive number.")
-    if truck_weight < 0:
-        raise ValueError("Invalid truck weight. Must be a non-negative number.")
-    if base_efficiency <= 0:
-        raise ValueError("Invalid base efficiency. Must be a positive number.")
-
-    # Calculate efficiency
-    weight_factor = truck_weight / Decimal('1000') * Decimal('0.01')
-    adjusted_efficiency = max(base_efficiency - weight_factor, Decimal('3.0'))  # Minimum MPG is 3
+    # Assume efficiency decreases by 0.01 MPG for every 1,000 lbs of weight
+    weight_factor = truck_weight / 1000 * 0.01
+    adjusted_efficiency = max(base_efficiency - weight_factor, 3.0)  # Minimum MPG is 3
     fuel_consumption = total_miles / adjusted_efficiency
-
     return {
-        'adjusted_efficiency': round(adjusted_efficiency, 2),
-        'fuel_consumption': round(fuel_consumption, 2)
+        'adjusted_efficiency': adjusted_efficiency,
+        'fuel_consumption': round(fuel_consumption, 2)  # Round to 2 decimal places
     }
-
 
 @app.route('/directions/<load_id>', methods=['GET'])
 def directions(load_id):
@@ -1013,6 +943,8 @@ def display_route(load_id):
         destination_coords=destination_coords,  # Tuple: (latitude, longitude)
         google_maps_api_key=google_maps_api_key
     )
-    
+
+
+
 if __name__ == '__main__':
     app.run(debug=True)
