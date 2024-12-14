@@ -39,11 +39,6 @@ if not google_maps_api_key:
 
 
 
-
-
-
-
-
 # Load CSV data with debugging
 import boto3
 import pandas as pd
@@ -95,6 +90,21 @@ print(posting_data.head())
 print(stop_data.head())
 
 
+genai_api_key = os.getenv('GOOGLE_GENAI_API_KEY')
+if not genai_api_key:
+    logger.error("Error: The GOOGLE_GENAI_API_KEY environment variable is not set.")
+    sys.exit(1)
+
+@app.route('/get-api-key', methods=['GET'])
+def get_api_key():
+    """
+    Provide the Google Generative AI API Key securely.
+    """
+    try:
+        return jsonify({'key': genai_api_key})
+    except Exception as e:
+        logger.error(f"Failed to retrieve API Key: {e}")
+        return jsonify({'error': 'Unable to retrieve API Key'}), 500
 
 
 
